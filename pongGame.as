@@ -68,8 +68,8 @@
 				b.y = 200;
 			}
 			function newSpeed(side){//true is left side, false is right
-				spdx = Math.random() * 25;
-				spdy = Math.random() * 10;
+				spdx = 10;
+				spdy = Math.random() * 12;
 				if (side) {
 					spdx *= -1;
 					spdy *= -1;
@@ -80,10 +80,11 @@
 
 			addEventListener(Event.ENTER_FRAME, ballBounce);//moving the ball around
 			function ballBounce(e:Event) {
-				if (dir1=="up")   r2.y -= 8;//moves paddle (r1) up if direction is up
-				if (dir1=="down") r2.y += 8;
-				if (dir2=="up")   r1.y -= 8;//moves paddle (r2) up if direction is up
-				if (dir2=="down") r1.y += 8;
+				if (dir1=="up"   && r2.y > 64) r2.y -= 8;//moves paddle (r1) up if direction is up
+				if (dir1=="down" && r2.y <336) r2.y += 8;
+				if (dir2=="up"   && r1.y > 64) r1.y -= 8;//moves paddle (r2) up if direction is up
+				if (dir2=="down" && r1.y <336) r1.y += 8;
+				trace(r1.y);
 				b.x += spdx; //makes ball travel at current spdx value
 				b.y += spdy;
 				if (b.x >= 535){ //550 - radius of ball
@@ -106,6 +107,8 @@
 					b.x -=  12;
 			}	t.text = String(sc1);//refresh the score on screen
 				t2.text = String(sc2);
+				if (b.x <= 10) resetBall();
+				if (b.x >= 540) resetBall();
 		}	stage.addEventListener(KeyboardEvent.KEY_DOWN, downkey);
 			function downkey(e:KeyboardEvent):void {//when certain keycode is down, change dir to match the direction.
 				if (e.keyCode==38) dir1="up";  //'^'
