@@ -30,9 +30,11 @@
 			addChild(t2);
 			
 			var l:line = new line; //adds the mid line
+			l.width = 400;
+			l.height = 2;
+			l.rotation = 90;
 			l.x = 275;
 			l.y = 200;
-			l.rotation = 90;
 			addChild(l);
 
 			var r1:recs = new recs();//adds the rectangle to the screen
@@ -69,10 +71,9 @@
 			}
 			function newSpeed(side){//true is left side, false is right
 				spdx = 10;
-				spdy = Math.random() * 12;
+				spdy = Math.random() * 24 - 12;
 				if (side) {
 					spdx *= -1;
-					spdy *= -1;
 				}
 			}
 			newSpeed();//sets the initial speed
@@ -84,7 +85,6 @@
 				if (dir1=="down" && r2.y <336) r2.y += 8;
 				if (dir2=="up"   && r1.y > 64) r1.y -= 8;//moves paddle (r2) up if direction is up
 				if (dir2=="down" && r1.y <336) r1.y += 8;
-				trace(r1.y);
 				b.x += spdx; //makes ball travel at current spdx value
 				b.y += spdy;
 				if (b.x >= 535){ //550 - radius of ball
@@ -92,7 +92,8 @@
 					resetBall();
 					sc1 +=  1;//add one score to p1
 					newSpeed(false);
-			}	if (b.y >= 385 || b.y <= 15) spdy *=  -1;//400 - radius of ball || radius of ball
+			}	if (b.y >= 385 && spdy > 0) spdy *=  -1;//400 - radius of ball || radius of ball
+				if (b.y <= 15 && spdy < 0) spdy *=  -1;
 				if (b.x <= 15)	{
 					resetBall();
 					sc2 +=  1;
