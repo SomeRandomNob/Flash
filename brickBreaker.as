@@ -60,15 +60,15 @@
 			var j:Number = 0;
 			for (i = 0; i < 4; i++)//change the 4 depending on how many rows of blocks you want
 			{
-				if (i == 1) myColorTransform.color = 0xFF0000;
-				if (i == 2) myColorTransform.color = 0xFFFF00;
-				if (i == 3) myColorTransform.color = 0x008000;
-				if (i == 4) myColorTransform.color = 0x0000FF;
+				if (i == 0) myColorTransform.color = 0xFF0000;//sets the first layers color
+				if (i == 1) myColorTransform.color = 0xFFFF00;//sets the second
+				if (i == 2) myColorTransform.color = 0x008000;//sets the third
+				if (i == 3) myColorTransform.color = 0x0000FF;//sets the forth
 				for (j = 0; j < 10; j++)//change the 10 for amount of collums
 				{
 					var br:block = new block  ;
-					br.transform.colorTransform = myColorTransform;
-					bArray.push(br);
+					br.transform.colorTransform = myColorTransform;//sets the block to whatever color is chosen above
+					bArray.push(br);//no idea what this does, dont forget it
 					addChild(br);
 					bArray[num].x = j * 55 + 2;//2 is the distance between the first block and side of stage
 					bArray[num].y = i * 25 + 5;//25 is distance between the blocks, block is 20 high so 5 apart
