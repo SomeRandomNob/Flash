@@ -56,13 +56,15 @@
 			var spdy:Number = 8;
 
 			function layBrick(){
-			for (var i:Number = 0; i < 4; i++)//change the 4 depending on how many rows of blocks you want
+			var i:Number = 0;
+			var j:Number = 0;
+			for (i = 0; i < 4; i++)//change the 4 depending on how many rows of blocks you want
 			{
 				if (i == 1) myColorTransform.color = 0xFF0000;
 				if (i == 2) myColorTransform.color = 0xFFFF00;
 				if (i == 3) myColorTransform.color = 0x008000;
 				if (i == 4) myColorTransform.color = 0x0000FF;
-				for (var j:Number = 0; j < 10; j++)//change the 10 for amount of collums
+				for (j = 0; j < 10; j++)//change the 10 for amount of collums
 				{
 					var br:block = new block  ;
 					br.transform.colorTransform = myColorTransform;
@@ -87,13 +89,13 @@
 				spdy = 0;
 				spdx = 0;
 			}
-			layBrick();
+			layBrick();//runs the layBrick function, adds bricks to the stage
 			addEventListener(Event.ENTER_FRAME,gameLoop);
 			function gameLoop(e:Event)
 			{
 				if (p.x < 40) p.x = 40;//makes sure paddle doesn't go off screen
 				if (p.x > 510) p.x = 510;
-				b.x +=  spdx;
+				b.x +=  spdx;//makes the ball move
 				b.y +=  spdy;
 				if (dir1=="left"  && p.x > 40)  p.x -= 8;//moves paddle (r1) up if direction is up
 				if (dir1=="right" && p.x < 510) p.x += 8;
@@ -108,8 +110,7 @@
 						bArray[i].x +=  800;//moves brick off screen
 						spdy *=  -1;
 						wsh.play();//plays sound effect
-						sc += 1;
-						trace(i);
+						sc += 1;//adds to score
 						break;//leaves the loop
 					}
 				}
@@ -127,11 +128,11 @@
 				{
 					resetBall();//runs the resetBall function
 				}
-				if (((spdx < 0) && b.x < 12))
+				if ((spdx < 0) && b.x < 12)
 				{
 					spdx *=  -1;
 				}
-				if (b.x >= 538 && spdx > 0)
+				if (b.x >= 538 && spdx > 0)//makes sure ball doesn't go further than 550-radius
 				{
 					spdx *=  -1;
 				}
@@ -143,7 +144,6 @@
 			function downkey(e:KeyboardEvent):void {//when certain keycode is down, change dir to match the direction.
 				if (e.keyCode==37) dir1="left"; //'<'
 				if (e.keyCode==39) dir1="right";//'>'
-				///if (e.keyCode==81) trace(num);
 			}
 			stage.addEventListener(KeyboardEvent.KEY_UP, upkey);
 			function upkey(e:KeyboardEvent):void {
