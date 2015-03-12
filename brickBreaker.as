@@ -6,33 +6,38 @@
 	import flash.text.TextFormat;
 	import flash.events.KeyboardEvent;//only needed if controling paddle with keyboard.
 	import flash.media.Sound; //needed for sound
-	import flash.geom.ColorTransform;
+	import flash.geom.ColorTransform;//needed for colors
 	public class brickBreaker extends MovieClip
 	{
 
 		public function brickBreaker()
 		{//keep in mind, stage is 550x400. padd is is on bottom and bricks get laid above
 			//variables
-			var p:pad = new pad  ;//this is the paddle
-			p.y = 385;
-			p.width = 80;
-			p.height = 12;
-			addChild(p);
+			
 
-			var myColorTransform = new ColorTransform();
+			var myColorTransform = new ColorTransform();//sets up color transform
 			var sc:Number = 0;
 			var dir1:String = "stop"; //sets default speed of paddles to stopped
 			var dir2:String = "stop";
 			var wsh:Sound = new woosh();//creates the sounds variable, remember to import sound above
 			var bArray:Array = new Array  ;
 			var num:Number = 0;
-
+			var lives:Number = 3;//keeps track of lives.
+			var spdx:Number = 8;
+			var spdy:Number = 8;
+				
+			var p:pad = new pad  ;//this is the paddle
+			p.y = 385;
+			p.width = 80;
+			p.height = 12;
+			addChild(p);
+			
 			var t:TextField = new TextField  ;//adds lives to screen
 			t.x = 355;
 			t.y = 120;
 			var tf:TextFormat = new TextFormat  ;
 			t.text = String(lives);//the variable lives will be printed to screen
-			tf.color = 0xFFFFFF;
+			tf.color = 0xFF00FF;
 			t.setTextFormat(tf);
 			addChild(t);
 			
@@ -50,14 +55,10 @@
 			b.width = 24;
 			addChild(b);
 
-			var lives:Number = 4;//keeps track of lives, start one number above amount of lives you want
-
-			var spdx:Number = 8;
-			var spdy:Number = 8;
-
-			function layBrick(){
-			var i:Number = 0;
+			function layBrick(){//whenever you want to lay bricks run this
+			var i:Number = 0;//sets up the increment variables, needed for forloop below
 			var j:Number = 0;
+			num = 0;
 			for (i = 0; i < 4; i++)//change the 4 depending on how many rows of blocks you want
 			{
 				if (i == 0) myColorTransform.color = 0xFF0000;//sets the first layers color
@@ -79,13 +80,11 @@
 			function resetBall()
 			{//sets the ball back to the paddle
 				b.x = p.x;
-				b.y = p.y - 5;
-				lives -= 1;
+				b.y = p.y - 6;
 			}
-			resetBall();//sets the ball up, removes one life.
+			resetBall();//sets the ball up
 			function endGame(){//stops the ball and makes it move off screen
 				b.x = 1000;
-				b.y = 10;
 				spdy = 0;
 				spdx = 0;
 			}
@@ -100,35 +99,37 @@
 				if (dir1=="left"  && p.x > 40)  p.x -= 8;//moves paddle (r1) up if direction is up
 				if (dir1=="right" && p.x < 510) p.x += 8;
 				
-				
-				
 				for (var i:Number = 0; i < num; i++)
 				{
 					if (b.hitTestObject(bArray[i]))
 					{                    //bArray[i].x + (bArray[i].width / 2)
 						spdx = 5 * (b.x - (bArray[i].x + 25)) / 25;//angle code for brick, make sure its before code that moves it off screen
-						bArray[i].x +=  800;//moves brick off screen
 						spdy *=  -1;
+						bArray[i].x +=  800;//moves brick off screen
 						wsh.play();//plays sound effect
-						sc += 1;//adds to score
+						if (bArray[i].y <=  5) sc+= 1;//highest block if true for all of these statments, gets 4 points
+						if (bArray[i].y <= 30) sc+= 1;//only true for 3 checks, gets 3 points
+						if (bArray[i].y <= 55) sc+= 1;
+						if (bArray[i].y <= 80) sc+= 1;
 						break;//leaves the loop
 					}
 				}
 				if (p.hitTestObject(b))//hitbox for paddle
 				{
-					spdy *=  -1;//          / (p.width / 2)
+					spdy *= -1;//           / (p.width / 2)
 					spdx  = 5 * (b.x - p.x) / 40; //angle on paddle
-					b.y  -=  6
+					b.y  -= 6;
 				}
-				if (b.y <= 12)
+				if (b.y <= 12 && spdy < 0)//&& spdy<0 is vital to stop ball from glitching in wall
 				{
 					spdy *=  -1;
 				}
-				if (b.y >= 400)//if ball goes offscreen on the bottom
+				if (b.y >= 400 && spdy > 0)//if ball goes offscreen on the bottom
 				{
 					resetBall();//runs the resetBall function
+					lives -= 1;
 				}
-				if ((spdx < 0) && b.x < 12)
+				if (spdx < 0 && b.x < 12)
 				{
 					spdx *=  -1;
 				}
@@ -136,14 +137,23 @@
 				{
 					spdx *=  -1;
 				}
-				if (lives <= 0) endGame();//if you run out of lives, run the endGame function
+				if (lives <= 0) {//when lives run out, ball no longer respawns
+					b.x = 1000;
+					spdy = 0;
+					spdx = 0;
+				}
+				if (sc == 100) lives += 1;//when user completes game, they get infinite lives
 				t.text = String("Lives: " + lives);//refreshes lives
-				s.text = String("Score: " + sc);//refreshes lives, places the text on screen
+				s.text = String("Score: " + sc);//refreshes score, places the text on screen
 			}
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, downkey);
 			function downkey(e:KeyboardEvent):void {//when certain keycode is down, change dir to match the direction.
 				if (e.keyCode==37) dir1="left"; //'<'
 				if (e.keyCode==39) dir1="right";//'>'
+				if (e.keyCode==81) {//when q is pressed, ball speeds super fast for test purposes only.
+					spdy *= 2;
+					spdx *= 2;
+				}
 			}
 			stage.addEventListener(KeyboardEvent.KEY_UP, upkey);
 			function upkey(e:KeyboardEvent):void {
