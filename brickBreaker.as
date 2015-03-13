@@ -9,12 +9,9 @@
 	import flash.geom.ColorTransform;//needed for colors
 	public class brickBreaker extends MovieClip
 	{
-
 		public function brickBreaker()
 		{//keep in mind, stage is 550x500. padd is on bottom and bricks get laid above
 			//variables
-			//what to add next, random angle b.y - some for resetBall & textformat for sc
-
 			var myColorTransform = new ColorTransform();//sets up color transform
 			var sc:Number = 0;
 			var dir1:String = "stop"; //sets default speed of paddles to stopped
@@ -39,7 +36,6 @@
 			t.y = 20;
 			var tf:TextFormat = new TextFormat  ;
 			t.text = String(lives);//the variable lives will be printed to screen
-
 			tf.color = 0xFF00FF;
 			t.setTextFormat(tf);
 			addChild(t);
@@ -70,7 +66,6 @@
 			hrt3.x = 84;
 			hrt3.y = 25;
 			addChild(hrt3);
-			
 			var bart:pad = new pad;//code for border and progress bar, ignore if not used
 			bart.x = 250;
 			bart.y = 40;
@@ -160,23 +155,14 @@
 					spdx  = 5 * (b.x - p.x) / 40; //angle on paddle
 					b.y  -= 6;
 				}
-				if (b.y <= 53 && spdy < 0)//&& spdy<0 is vital to stop ball from glitching in wall
-				{
-					spdy *=  -1;
-				}
+				if (b.y <= 53 && spdy < 0)spdy *=  -1;//&& spdy<0 is vital to stop ball from glitching in wall
 				if (b.y >= 500 && spdy > 0)//if ball goes offscreen on the bottom
 				{
 					resetBall();//runs the resetBall function
 					lives -= 1;
 				}
-				if (spdx < 0 && b.x < 12)
-				{
-					spdx *=  -1;
-				}
-				if (b.x >= 538 && spdx > 0)//makes sure ball doesn't go further than 550-radius
-				{
-					spdx *=  -1;
-				}
+				if (spdx < 0 && b.x < 12)spdx *=  -1;
+				if (b.x >= 538 && spdx > 0)spdx *=  -1;//makes sure ball doesn't go further than 550-radius
 				if (lives <= 0) {//when lives run out, ball no longer respawns
 					b.x = 1000;
 					spdy = 0;
