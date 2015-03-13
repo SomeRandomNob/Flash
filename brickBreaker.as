@@ -11,9 +11,9 @@
 	{
 
 		public function brickBreaker()
-		{//keep in mind, stage is 550x400. padd is is on bottom and bricks get laid above
+		{//keep in mind, stage is 550x500. padd is on bottom and bricks get laid above
 			//variables
-			
+			//what to add next, random angle b.y - some for resetBall & textformat for sc
 
 			var myColorTransform = new ColorTransform();//sets up color transform
 			var sc:Number = 0;
@@ -23,30 +23,33 @@
 			var bArray:Array = new Array  ;
 			var num:Number = 0;
 			var lives:Number = 3;//keeps track of lives.
-			var spdx:Number = 8;
-			var spdy:Number = 8;
-				
+			var spdx:Number = 12;
+			var spdy:Number = 12;
+			var i:Number = 0;//sets up the increment variables, needed for forloop below
+			var j:Number = 0;
+			
 			var p:pad = new pad  ;//this is the paddle
-			p.y = 385;
+			p.y = 485;
 			p.width = 80;
 			p.height = 12;
 			addChild(p);
 			
 			var t:TextField = new TextField  ;//adds lives to screen
-			t.x = 355;
-			t.y = 120;
+			t.x = 5;
+			t.y = 20;
 			var tf:TextFormat = new TextFormat  ;
 			t.text = String(lives);//the variable lives will be printed to screen
+
 			tf.color = 0xFF00FF;
 			t.setTextFormat(tf);
 			addChild(t);
 			
 			var s:TextField = new TextField  ;//adds score to screen
-			s.x = 155;
-			s.y = 120;
+			s.x = 502;
+			s.y = 20;
+			s.textColor = Math.random() * 0xFFFFFF;//because of silly text format req
 			var sf:TextFormat = new TextFormat  ;
 			s.text = String(sc);
-			sf.color = 0xFFFFFF;
 			s.setTextFormat(sf);
 			addChild(s);
 			
@@ -54,11 +57,50 @@
 			b.height = 24;
 			b.width = 24;
 			addChild(b);
-
-			function layBrick(){//whenever you want to lay bricks run this
-			var i:Number = 0;//sets up the increment variables, needed for forloop below
-			var j:Number = 0;
-			num = 0;
+			
+			var hrt1:heart = new heart;//code for hearts
+			hrt1.x = 60;
+			hrt1.y = 25;
+			addChild(hrt1);
+			var hrt2:heart = new heart;
+			hrt2.x = 72;
+			hrt2.y = 25;
+			addChild(hrt2);
+			var hrt3:heart = new heart;
+			hrt3.x = 84;
+			hrt3.y = 25;
+			addChild(hrt3);
+			
+			var bart:pad = new pad;//code for border and progress bar, ignore if not used
+			bart.x = 250;
+			bart.y = 40;
+			bart.width = 1000;
+			bart.height = 2;
+			myColorTransform.color = 0x000000;
+			bart.transform.colorTransform = myColorTransform;
+			addChild(bart);
+			var bar3:pad = new pad;
+			bar3.x = 150;
+			bar3.y = 20;
+			bar3.width = 2;
+			bar3.height = 40;
+			bar3.transform.colorTransform = myColorTransform;
+			addChild(bar3);
+			var bar4:pad = new pad;
+			bar4.x = 350;
+			bar4.y = 20;
+			bar4.width = 2;
+			bar4.height = 40;
+			bar4.transform.colorTransform = myColorTransform;
+			addChild(bar4);
+			var pbar:pad = new pad;
+			myColorTransform.color = 0x66FF00;
+			pbar.transform.colorTransform = myColorTransform;
+			pbar.height = 40;
+			pbar.y = 20;
+			myColorTransform.color = 0x66FF00;
+			pbar.transform.colorTransform = myColorTransform;
+			
 			for (i = 0; i < 4; i++)//change the 4 depending on how many rows of blocks you want
 			{
 				if (i == 0) myColorTransform.color = 0xFF0000;//sets the first layers color
@@ -72,10 +114,9 @@
 					bArray.push(br);//no idea what this does, dont forget it
 					addChild(br);
 					bArray[num].x = j * 55 + 2;//2 is the distance between the first block and side of stage
-					bArray[num].y = i * 25 + 5;//25 is distance between the blocks, block is 20 high so 5 apart
+					bArray[num].y = i * 25 + 45;//25 is distance between the blocks, block is 20 high so 5 apart
 					num++;
 				}
-			}
 			}
 			function resetBall()
 			{//sets the ball back to the paddle
@@ -88,7 +129,6 @@
 				spdy = 0;
 				spdx = 0;
 			}
-			layBrick();//runs the layBrick function, adds bricks to the stage
 			addEventListener(Event.ENTER_FRAME,gameLoop);
 			function gameLoop(e:Event)
 			{
@@ -107,24 +147,24 @@
 						spdy *=  -1;
 						bArray[i].x +=  800;//moves brick off screen
 						wsh.play();//plays sound effect
-						if (bArray[i].y <=  5) sc+= 1;//highest block if true for all of these statments, gets 4 points
-						if (bArray[i].y <= 30) sc+= 1;//only true for 3 checks, gets 3 points
-						if (bArray[i].y <= 55) sc+= 1;
-						if (bArray[i].y <= 80) sc+= 1;
+						if (bArray[i].y <= 45) sc+= 1;
+						if (bArray[i].y <= 70) sc+= 1;
+						if (bArray[i].y <= 95) sc+= 1;
+						if (bArray[i].y <= 120)sc+= 1;
 						break;//leaves the loop
 					}
 				}
 				if (p.hitTestObject(b))//hitbox for paddle
 				{
-					spdy *= -1;//           / (p.width / 2)
+					if (spdy > 0) spdy *= -1;//           / (p.width / 2)
 					spdx  = 5 * (b.x - p.x) / 40; //angle on paddle
 					b.y  -= 6;
 				}
-				if (b.y <= 12 && spdy < 0)//&& spdy<0 is vital to stop ball from glitching in wall
+				if (b.y <= 53 && spdy < 0)//&& spdy<0 is vital to stop ball from glitching in wall
 				{
 					spdy *=  -1;
 				}
-				if (b.y >= 400 && spdy > 0)//if ball goes offscreen on the bottom
+				if (b.y >= 500 && spdy > 0)//if ball goes offscreen on the bottom
 				{
 					resetBall();//runs the resetBall function
 					lives -= 1;
@@ -142,7 +182,18 @@
 					spdy = 0;
 					spdx = 0;
 				}
+				if (lives == 2) hrt3.x = 1111;//when lives go down, hearts will move offscreen
+				if (lives == 1) hrt2.x = 1111;
+				if (lives == 0) {
+					hrt1.x = 1111
+					myColorTransform.color = 0xCC0000;
+					pbar.transform.colorTransform = myColorTransform;//turns prog bar red when you die
+				}
+				
 				if (sc == 100) lives += 1;//when user completes game, they get infinite lives
+				pbar.width = 0 + (2 * sc);//width of progress bar filling is constantly added to
+				pbar.x = 150 + (sc);//bar is moved over to seem to flow from left side of box
+				addChild(pbar);
 				t.text = String("Lives: " + lives);//refreshes lives
 				s.text = String("Score: " + sc);//refreshes score, places the text on screen
 			}
@@ -150,10 +201,10 @@
 			function downkey(e:KeyboardEvent):void {//when certain keycode is down, change dir to match the direction.
 				if (e.keyCode==37) dir1="left"; //'<'
 				if (e.keyCode==39) dir1="right";//'>'
-				if (e.keyCode==81) {//when q is pressed, ball speeds super fast for test purposes only.
+				/*if (e.keyCode==81) {//when q is pressed, ball speeds super fast for test purposes only.
 					spdy *= 2;
 					spdx *= 2;
-				}
+				}*/
 			}
 			stage.addEventListener(KeyboardEvent.KEY_UP, upkey);
 			function upkey(e:KeyboardEvent):void {
