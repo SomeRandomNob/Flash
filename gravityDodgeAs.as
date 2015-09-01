@@ -35,23 +35,28 @@
 	-movePlayer
 	-spawnBubs
 	-moveBubs
-	-explode
-	-explodeBubs
+	-hitBubs
 	-changeBubs
 	-refreshTxt
+	-timers
 	-endGame
+	-restart
+	-explode(by, bx)
+	-bubRemove(i)
 */
 			//variables
 			var myColorTransform = new ColorTransform();//defines the color transform
 			var myLoader:URLLoader = new URLLoader();
 			var myXML:XML;
-			var music:Sound = new nujabes();//plays "Reflection Eternal" by Nujabes
-			music.play();
+			var music:Sound = new nujabes();//plays "Ordinary Joe" by Nujabes
+			var now:Date = new Date();
+			var startTime:Number = now.getTime();
+			var curTime:Number = now.getTime();
 			//v All three run parellel, make sure to splice them all at the same time v
 			var bubArray:Array = new Array();//holds all the bubbles
 			var bxArray:Array = new Array();//holds bubbles xspeed
 			var byArray:Array = new Array();//holds bubbles xspeed
-			
+			//all simularly named to ease copy and paste edit time	
 			var exArray:Array = new Array();//holds the exploding bubbles
 			
 			var nGrav:Boolean = false;//is there gravity pulling north?
@@ -64,28 +69,55 @@
 			var spawnSide:Number = 1;//1 for north, 2 for east ect
 			var lives:Number = 5;//start with 5 lives, lose when hitting exploding bubble or evil bubble
 			var score:Number = 0;//amount of bubbles absorbed
+			var hscore:Number = 0;//saves highscore in ram, wont save after program restart
+			var time:Number = 0;//current time since last restart
+			var htime:Number = 0;//highest time achived
 //onload
 			var p:p1 = new p1();//spawns player
 			p.x = 275;
 			p.y = 200;
 			addChild(p);
-			//text
+//text		tells user to click i for info, disapears after 3 seconds
+			var infoTxt:TextField = new TextField();
+			infoTxt.x = 10;
+			infoTxt.y = 380;
+			infoTxt.text = "i = info";
+			addChild(infoTxt);
+			
 			var scoreTxt:TextField = new TextField();//holds score(# of bubA's absorbed)
 			scoreTxt.x = 525;
 			scoreTxt.y = 10;
 			scoreTxt.text = String(score);
 			addChild(scoreTxt);
+			var hscoreTxt:TextField = new TextField();//highest amount achived
+			hscoreTxt.x = 490;
+			hscoreTxt.y = 10;//we don't add it onload because player has no highscore yet
 			var sf:TextFormat = new TextFormat();
-			sf.bold = true;
+			sf.bold = true;//bolding format used for both time and score
 			scoreTxt.setTextFormat(sf);
-			var xmlTxt:TextField = new TextField();//xml textfield
-			xmlTxt.x = 5;
-			xmlTxt.y = 30;
-			xmlTxt.width = 155;//this and below needed to fit it all onstage
-			xmlTxt.multiline = true;
-			xmlTxt.wordWrap = true;
+			
+			var timeTxt:TextField = new TextField();//current time since last restart
+			timeTxt.x = 525;
+			timeTxt.y = 380;
+			timeTxt.text = String(curTime - startTime);
+			addChild(timeTxt);
+			var htimeTxt:TextField = new TextField();//highest time
+			htimeTxt.x = 490;
+			htimeTxt.y = 380;
+			
+			var instTxt:TextField = new TextField();//xml textfield/instructions
+			instTxt.x = 5;
+			instTxt.y = 30;
+			instTxt.width = 155;//this and below needed to fit it all onstage
+			instTxt.multiline = true;
+			instTxt.wordWrap = true;
+			var conTxt:TextField = new TextField();//control(l)s textfield
+			conTxt.x = 5;
+			conTxt.y = 300;
+			conTxt.multiline = true;
+			conTxt.wordWrap = true;
 			//draws healthbar
-			var hBar:bar = new bar();
+			var hBar:bar = new bar();//bar around filler
 			hBar.x = 51;
 			hBar.y = 13.5;
 			addChild(hBar);
@@ -93,8 +125,14 @@
 			filler.x = 51;
 			filler.y = 13.5;
 			addChild(filler);
-			//loads xml
+			
 			myLoader.load(new URLRequest("info.xml"));
+			//loads xml
+			//<xml>
+			//<howtoplay>When two bubbles hit, they explode. Don't touch the explosion or you'll lose health! When a bubble hits an explosion it will super charge it, these will also damage you.</howtoplay>
+			//<controlls>i = instructions            r = restart           wasd or arrow keys to move</controlls>
+			//</xml>
+			music.play();//plays song
 //event listeners
 			addEventListener(Event.ENTER_FRAME, gLoop);
 			function gLoop(e:Event):void
@@ -108,43 +146,57 @@
 					tickClock = 0;//resets counter
 				}
 				moveBubs();//moves bubbles
-				explodeBubs();//hithoxes and removing bubs
+				hitBubs();//hithoxes and removing bubs
 				changeBubs();//changes normal bubbles to red evil ones
 				refreshTxt();//preforms acrobatics whist on fire
+				timers();
 				if (lives <= 0) endGame();//ends everything
 			}
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, downkey);
 			function downkey(e:KeyboardEvent):void
 			{//when any of these are true, movePlayer() will pull in corisponding direction
-				if (e.keyCode == 37)wGrav = true;
-				if (e.keyCode == 38)nGrav = true;
-				if (e.keyCode == 39)eGrav = true;
-				if (e.keyCode == 40)sGrav = true;
+				if (e.keyCode == 65 || e.keyCode == 37)wGrav = true;
+				if (e.keyCode == 87 || e.keyCode == 38)nGrav = true;
+				if (e.keyCode == 68 || e.keyCode == 39)eGrav = true;
+				if (e.keyCode == 83 || e.keyCode == 40)sGrav = true;
 				//when "i" is pressed, display instructions from xml
-				if (e.keyCode == 73)addChild(xmlTxt);
+				if (e.keyCode == 73)
+				{//when you press i, add controls and instructions to screen
+					addChild(conTxt);
+					addChild(instTxt);
+				}
+				if (e.keyCode == 82) restart();
 			}
 			stage.addEventListener(KeyboardEvent.KEY_UP, upkey);
 			function upkey(e:KeyboardEvent):void
 			{//stops pulling player
-				if (e.keyCode == 37)wGrav = false;
-				if (e.keyCode == 38)nGrav = false;
-				if (e.keyCode == 39)eGrav = false;
-				if (e.keyCode == 40)sGrav = false;
+				if (e.keyCode == 65 || e.keyCode == 37)wGrav = false;
+				if (e.keyCode == 87 || e.keyCode == 38)nGrav = false;
+				if (e.keyCode == 68 || e.keyCode == 39)eGrav = false;
+				if (e.keyCode == 83 || e.keyCode == 40)sGrav = false;
 				//stop showing instructions when let go
-				if (e.keyCode == 73)removeChild(xmlTxt);
+				if (e.keyCode == 73)
+				{
+					removeChild(conTxt);
+					removeChild(instTxt);
+				}
 			}
 			myLoader.addEventListener(Event.COMPLETE, processXML);
 			function processXML(e:Event):void
 			{
 				myXML = new XML(e.target.data);
-				xmlTxt.text = String(myXML.howtoplay);//makes xmlTxt = to xml value
+				instTxt.text = String(myXML.howtoplay);//makes instTxt = to xml value
+				conTxt.text = String(myXML.controlls);//sometimes spelling errors are nessesary to prevent computer errors
 			}
 //functions
 			function healthBar():void
 			{//changes the position and width of filler inside of health bar
-				filler.width = 20 * lives;
-				filler.x = 10 * lives + 1;
-				addChild(filler);//keeps filler on top of bubs/explosions so you can see health always
+				if (lives > 0){
+					filler.width = 20 * lives;
+					filler.x = 10 * lives + 1;
+					addChild(filler);//keeps filler on top of bubs/explosions so you can see health always
+				}//so bar doesn't glitch when negative when playing fullscreen
+				else filler.width = 0;
 			}
 			function movePlayer():void
 			{//pulls player in direction, as long as they're not going offscreen
@@ -194,42 +246,26 @@
 				spawnSide = Math.floor(Math.random() * 5);//if its 4, you will VERY rarely get a 4, only 3.x
 			}
 			function moveBubs():void
-			{
+			{//moves bubbles and deals with heir hitboxes
 				for (var k:Number = 0; k < bubArray.length; k++)
 				{//moves bubble array at its speed
 					bubArray[k].x +=  bxArray[k];
 					bubArray[k].y +=  byArray[k];
 					if (bubArray[k].hitTestObject(p)){//when it hits a player
-						removeChild(bubArray[k]);//get it offscreen
-						if (bubArray[k].width > 15) lives--;//evil bubbles will ALWAYYS be more than 15 in width
-						else if(lives > 1) score++;//if you still have lives and the bub wasn't evil, add to score
-						bubArray.splice(k, 1);//removes from the array
-						bxArray.splice(k, 1);
-						byArray.splice(k, 1);
+						if (bubArray[k].width > 16) lives--;//evil bubbles will ALWAYYS be more than 15 in width
+						else score++;//if you still have lives and the bub wasn't evil, add to score
+						bubRemove(k);
 						spawnRate -= Math.random() / 10;
 					}	//every score that you get, it lowers the amount of ticks inbetween spawnBubs by 0-0.1
 				}
 			}
-			function explode(bx, by):void
-			{//spawns an exploding bubble at the x and y coord passed through function
-				var exBub:orb = new orb();
-				exArray.push(exBub);
-				exArray[exArray.length - 1].width = 15;
-				exArray[exArray.length - 1].height = 15;
-				exArray[exArray.length - 1].x = bx;
-				exArray[exArray.length - 1].y = by;
-				addChild(exArray[exArray.length - 1]);
-			}
-			function explodeBubs():void
-			{
+			function hitBubs():void
+			{//removes bubbles offscreen, exicutes explode when two hit eachother
 				for (var k:Number = 0; k < bubArray.length; k++)
 				{
-					if (bubArray[k].y > 415 || bubArray[k].y < 0 || bubArray[k].x > 565 || bubArray[k].x < -15)
+					if (bubArray[k].y > 415 || bubArray[k].y < -15 || bubArray[k].x > 565 || bubArray[k].x < -15)
 					{//when bub goes offscreen, remove it
-						removeChild(bubArray[k]);
-						bubArray.splice(k, 1);
-						bxArray.splice(k, 1);
-						byArray.splice(k, 1);
+						bubRemove(k);
 						break;
 					}
 					for (var j:uint = k + 1; j < bubArray.length; j++)
@@ -237,14 +273,8 @@
 						if (k != j && bubArray[k].hitTestObject(bubArray[j]))
 						{//when a bub hits a bub remove them both and run explode, pass through x and y coord
 							explode(bubArray[j].x, bubArray[j].y);
-							removeChild(bubArray[j]);
-							bubArray.splice(j, 1);
-							removeChild(bubArray[k]);
-							bubArray.splice(k, 1);
-							bxArray.splice(j, 1);
-							byArray.splice(j, 1);
-							bxArray.splice(k, 1);
-							byArray.splice(k, 1);
+							bubRemove(j);
+							bubRemove(k);
 							break;
 						}
 					}
@@ -290,10 +320,61 @@
 			{//keep refreshing text
 				scoreTxt.text = String(score);
 				scoreTxt.setTextFormat(sf);
+				timeTxt.text = String(time);
+				timeTxt.setTextFormat(sf);
+			}
+			function timers():void
+			{
+				var now:Date = new Date();
+				curTime = now.getTime();//current time is always updated to keep track of time since restart
+				if (lives > 0) time = Math.floor((curTime - startTime) / 1000)//(time now - time started)ms converted to seconds
+				if (time > 3 && infoTxt.x == 10) infoTxt.x = 900;//can't remove this child so i have to hide it
 			}
 			function endGame():void
 			{
-				spawnRate = 1000000000;
+				spawnRate = 1000000000;//so no more spawn(for a while)
+				for (var i:Number = 0; i < bubArray.length; i++) bubRemove(i);
+				//suppose to remove everything offfscreen, doesn't always work perfectly
+				for (var j:Number = 0; j < exArray.length; j++)
+				{
+					removeChild(exArray[j]);
+					exArray.splice(j, 1);
+				}
+			}
+			function restart():void
+			{
+				if (lives > 0) endGame();//if they're restarting while still in a game, they need to run enggame
+				spawnRate = 8;//restarts the spawnrate
+				if (score > hscore) hscore = score;//if new highscore is achived, replace old
+				hscoreTxt.text = String(hscore);
+				addChild(hscoreTxt);//do this for the first time now so on their first run they dont see hs of 0
+				if (time > htime) htime = time;
+				htimeTxt.text  = String(htime);
+				startTime = curTime;
+				addChild(htimeTxt);
+				score = 0;//rests variables
+				time = 0;
+				lives = 5;
+				infoTxt.x = 10;//brings the "click i for info" up for a while more
+				p.x = 275;
+				p.y = 200;
+			}
+			function explode(bx, by):void
+			{//spawns an exploding bubble at the x and y coord passed through function
+				var exBub:orb = new orb();
+				exArray.push(exBub);
+				exArray[exArray.length - 1].width = 15;
+				exArray[exArray.length - 1].height = 15;
+				exArray[exArray.length - 1].x = bx;
+				exArray[exArray.length - 1].y = by;
+				addChild(exArray[exArray.length - 1]);
+			}
+			function bubRemove(i):void
+			{//removes a bubble, had to copy this code many times so I put it in it's own function
+				removeChild(bubArray[i]);
+				bubArray.splice(i, 1);
+				bxArray.splice(i, 1);
+				byArray.splice(i, 1);
 			}
 		}
 	}
